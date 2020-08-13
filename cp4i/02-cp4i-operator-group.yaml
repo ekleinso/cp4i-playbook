@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: CommonService.v3.operator.ibm.com
+  name: common-services
+  namespace: cp4i
+spec:
+  targetNamespaces:
+  - cp4i
