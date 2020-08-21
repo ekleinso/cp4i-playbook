@@ -1,17 +1,33 @@
-#CP4I
+# CP4I
 
-1. Get entitlement key - https://myibm.ibm.com/products-services/containerlibrary
+1. Login to Openshift
+```
+oc login
+```
 
-2. Try to login with Docker
+2. Get entitlement key - https://myibm.ibm.com/products-services/containerlibrary
+
+3. Try to login with Docker
 ```
 export ENTITLED_REGISTRY=cp.icr.io
 export ENTITLED_REGISTRY_USER=cp
-export ENTITLED_REGISTRY_KEY=<your key>
+export ENTITLED_REGISTRY_KEY=<your entitlement key>
 docker login -u $ENTITLED_REGISTRY_USER -p $ENTITLED_REGISTRY_KEY $ENTITLED_REGISTRY
 docker pull $ENTITLED_REGISTRY/cp/icpa/icpa-installer:4.2.0
 ```
 
-3. Create cp4i project <br>
+4. Configure NetworkPolicy<br>
+Run command:
+```
+oc get --namespace openshift-ingress-operator ingresscontrollers/default --output jsonpath='{.status.endpointPublishingStrategy.type}'
+```
+If the result is **HostNetwork** then run:
+```
+oc label namespace default 'network.openshift.io/policy-group=ingress'
+```
+Note: More details on configuration provided in [Openshift Docs](https://docs.openshift.com/container-platform/4.5/networking/network_policy/about-network-policy.html)
+
+5. Create cp4i project <br>
    `oc new-project cp4i` <br>
 or
 ```yaml
@@ -27,12 +43,12 @@ or
   EOF
 ```
 
-4. Create secret with entitlement key <br>
+6. Create secret with entitlement key <br>
   ```
   oc create secret docker-registry ibm-entitlement-key --docker-username=${ENTITLED_REGISTRY_USER} --docker-password=${ENTITLED_REGISTRY_KEY} --docker-server=${ENTITLED_REGISTRY} --namespace=cp4i
   ```
 
-5. Subscribe to platform navigator operator
+7. Subscribe to platform navigator operator
 ```yaml
 cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1
@@ -63,10 +79,10 @@ spec:
   startingCSV: ibm-integration-platform-navigator.v4.0.1
 EOF
 ```
-6. Wait for operator <br>
+8. Wait for operator <br>
    `oc -n cp4i get csv`
 
-7. Create an instance of navigator
+9. Create an instance of navigator
 ```yaml
 cat <<EOF | oc apply -f -
 apiVersion: integration.ibm.com/v1beta1
@@ -83,7 +99,7 @@ spec:
 EOF
 ```
 
-8. Subscribe to additional CP4I operators
+10. Subscribe to additional CP4I operators
 ```yaml
 cat <<EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
@@ -180,9 +196,4 @@ spec:
   startingCSV: ibm-integration-asset-repository.v1.0.1
 EOF
 ```
-
-oc -n openshift-operators delete subscription ibm-integration-asset-repository ibm-integration-operations-dashboard ibm-apiconnect ibm-appconnect ibm-eventstreams ibm-mq
-
-oc -n cp4i delete PlatformNavigator cp4i-navigator
-oc -n cp4i delete subscription ibm-integration-platform-navigator
 
