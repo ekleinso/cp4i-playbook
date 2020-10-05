@@ -4,12 +4,12 @@ metadata:
   name: ibm-mq
   namespace: openshift-operators
 spec:
-  channel: v1.1
+  channel: v1.2
   installPlanApproval: Automatic
   name: ibm-mq
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-mq.v1.1.0
+  startingCSV: ibm-mq.v1.2.0
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -35,7 +35,7 @@ spec:
   name: ibm-appconnect
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-appconnect.v1.0.3
+  startingCSV: ibm-appconnect.v1.0.4
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -43,12 +43,12 @@ metadata:
   name: ibm-apiconnect
   namespace: openshift-operators
 spec:
-  channel: v1.0
+  channel: v2.0
   installPlanApproval: Automatic
   name: ibm-apiconnect
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-apiconnect.v1.0.2
+  startingCSV: ibm-apiconnect.v2.0.0
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -56,12 +56,12 @@ metadata:
   name: ibm-integration-operations-dashboard
   namespace: openshift-operators
 spec:
-  channel: v1.0
+  channel: v2.0
   installPlanApproval: Automatic
   name: ibm-integration-operations-dashboard
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-operations-dashboard.v1.0.0
+  startingCSV: ibm-integration-operations-dashboard.v2.0.0
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -74,4 +74,4 @@ spec:
   name: ibm-integration-asset-repository
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-asset-repository.v1.0.1
+  startingCSV: ibm-integration-asset-repository.v1.0.2

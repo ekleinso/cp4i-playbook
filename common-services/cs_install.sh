@@ -44,7 +44,7 @@ spec:
   name: ibm-common-service-operator
   source: opencloud-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-common-service-operator.v3.4.3
+  startingCSV: ibm-common-service-operator.v3.5.3
 EOF
 
 echo -n "ibm-common-service-operator initializing "

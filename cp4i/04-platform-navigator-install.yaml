@@ -8,4 +8,4 @@ spec:
     accept: true
   mqDashboard: true
   replicas: 3
-  version: 2020.2.1
+  version: 2020.3.1

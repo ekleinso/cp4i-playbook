@@ -43,7 +43,7 @@ spec:
   name: ibm-integration-platform-navigator
   source: ibm-operator-catalog
   sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-platform-navigator.v4.0.0
+  startingCSV: ibm-integration-platform-navigator.v4.0.2
 EOF
 
 echo -n "waiting for cp4i Platform Navigator "
@@ -64,96 +64,8 @@ spec:
     accept: true
   mqDashboard: true
   replicas: 3
-  version: 2020.2.1
+  version: 2020.3.1
 EOF
 
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-mq
-  namespace: openshift-operators
-spec:
-  channel: v1.1
-  installPlanApproval: Automatic
-  name: ibm-mq
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-mq.v1.1.0
-EOF
-
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-eventstreams
-  namespace: openshift-operators
-spec:
-  channel: v2.0
-  installPlanApproval: Automatic
-  name: ibm-eventstreams
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-eventstreams.v2.0.1
-EOF
-
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-appconnect
-  namespace: openshift-operators
-spec:
-  channel: v1.0
-  installPlanApproval: Automatic
-  name: ibm-appconnect
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-appconnect.v1.0.2
-EOF
-
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-apiconnect
-  namespace: openshift-operators
-spec:
-  channel: v1.0
-  installPlanApproval: Automatic
-  name: ibm-apiconnect
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-apiconnect.v1.0.1
-EOF
-
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-integration-operations-dashboard
-  namespace: openshift-operators
-spec:
-  channel: v1.0
-  installPlanApproval: Automatic
-  name: ibm-integration-operations-dashboard
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-operations-dashboard.v1.0.0
-EOF
-
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-integration-asset-repository
-  namespace: openshift-operators
-spec:
-  channel: v1.0
-  installPlanApproval: Automatic
-  name: ibm-integration-asset-repository
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-asset-repository.v1.0.0
-EOF
+oc apply -f 05-additional-cp4i-operators.yaml
 
