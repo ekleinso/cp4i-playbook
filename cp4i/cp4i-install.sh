@@ -4,6 +4,7 @@ export ENTITLED_REGISTRY=cp.icr.io
 export ENTITLED_REGISTRY_USER=cp
 export ENTITLED_REGISTRY_KEY=<your key>
 
+oc label namespace default 'network.openshift.io/policy-group=ingress'
 
 cat <<EOF | oc apply -f -
 apiVersion: v1
