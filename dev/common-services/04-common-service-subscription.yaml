@@ -1,0 +1,23 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: CommonService.v3.operator.ibm.com
+  name: common-service-operator-group
+  namespace: common-services
+spec:
+  targetNamespaces:
+  - common-services
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ibm-common-service-operator
+  namespace: common-services
+spec:
+  channel: stable-v1
+  installPlanApproval: Automatic
+  name: ibm-common-service-operator
+  source: opencloud-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: ibm-common-service-operator.v3.5.4
