@@ -4,21 +4,11 @@ export ENTITLED_REGISTRY=cp.icr.io
 export ENTITLED_REGISTRY_USER=cp
 export ENTITLED_REGISTRY_KEY=<your key>
 
-if [ $(oc get --namespace openshift-ingress-operator ingresscontrollers/default --output jsonpath='{.status.endpointPublishingStrategy.type}') == "HostNetwork" ]
-then
-  oc label namespace default 'network.openshift.io/policy-group=ingress'
-fi
-
-
 echo "Creating project"
-oc create project cp4i
+oc new-project cp4i
 
-if [ $ENTITLED_REGISTRY_KEY == "<your key>" ] then
-  echo "You must configured ENTITLED_REGISTRY_KEY in script"
-else
-  echo "Creating ibm-entitlement-key"
-  oc create secret docker-registry ibm-entitlement-key --docker-username=${ENTITLED_REGISTRY_USER} --docker-password=${ENTITLED_REGISTRY_KEY} --docker-server=${ENTITLED_REGISTRY} --namespace=cp4i
-fi
+echo "Creating ibm-entitlement-key"
+oc create secret docker-registry ibm-entitlement-key --docker-username=${ENTITLED_REGISTRY_USER} --docker-password=${ENTITLED_REGISTRY_KEY} --docker-server=${ENTITLED_REGISTRY} --namespace=cp4i
  
 echo "Creating subscription"
 oc apply -f 02-cp4i-subscription.yaml
@@ -35,4 +25,9 @@ oc apply -f 03-platform-navigator-install.yaml
 
 echo "Subscribing to CP4I Operators"
 oc apply -f 04-additional-cp4i-operators.yaml
+
+if [ $(oc get --namespace openshift-ingress-operator ingresscontrollers/default --output jsonpath='{.status.endpointPublishingStrategy.type}') == "HostNetwork" ]
+then
+  oc label namespace default network.openshift.io/policy-group=ingress
+fi
 
