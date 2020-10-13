@@ -4,69 +4,35 @@ export ENTITLED_REGISTRY=cp.icr.io
 export ENTITLED_REGISTRY_USER=cp
 export ENTITLED_REGISTRY_KEY=<your key>
 
-oc label namespace default 'network.openshift.io/policy-group=ingress'
+if [ $(oc get --namespace openshift-ingress-operator ingresscontrollers/default --output jsonpath='{.status.endpointPublishingStrategy.type}') == "HostNetwork" ]
+then
+  oc label namespace default 'network.openshift.io/policy-group=ingress'
+fi
 
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: cp4i
-  annotations:
-    openshift.io/node-selector: ""
-  labels:
-    openshift.io/cluster-monitoring: "true"
-EOF
 
-oc create secret docker-registry ibm-entitlement-key --docker-username=${ENTITLED_REGISTRY_USER} --docker-password=${ENTITLED_REGISTRY_KEY} --docker-server=${ENTITLED_REGISTRY} --namespace=cp4i
+echo "Creating project"
+oc create project cp4i
 
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  annotations:
-    olm.providedAPIs: CommonService.v3.operator.ibm.com
-  name: common-services
-  namespace: cp4i
-spec:
-  targetNamespaces:
-  - cp4i
-EOF
+if [ $ENTITLED_REGISTRY_KEY == "<your key>" ] then
+  echo "You must configured ENTITLED_REGISTRY_KEY in script"
+else
+  echo "Creating ibm-entitlement-key"
+  oc create secret docker-registry ibm-entitlement-key --docker-username=${ENTITLED_REGISTRY_USER} --docker-password=${ENTITLED_REGISTRY_KEY} --docker-server=${ENTITLED_REGISTRY} --namespace=cp4i
+fi
+ 
+echo "Creating subscription"
+oc apply -f 02-cp4i-subscription.yaml
 
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: ibm-integration-platform-navigator
-  namespace: cp4i
-spec:
-  channel: v4.0
-  installPlanApproval: Automatic
-  name: ibm-integration-platform-navigator
-  source: ibm-operator-catalog
-  sourceNamespace: openshift-marketplace
-  startingCSV: ibm-integration-platform-navigator.v4.0.2
-EOF
-
-echo -n "waiting for cp4i Platform Navigator "
+echo -n "waiting for cp4i Platform Navigator subscription"
 while [ "$(oc -n cp4i get csv --no-headers -o custom-columns=NAME:.metadata.name,PHASE:.status.phase | grep ibm-integration-platform-navigator | awk '{print $2}')" != "Succeeded" ]
 do
   echo -n "."
 done
-echo -e "\nIBM Cloud Pak for Integration Platform Navigator install succeeded"
+echo -e "\nIBM Cloud Pak for Integration Platform Navigator subscription succeeded"
 
-cat <<EOF | oc apply -f -
-apiVersion: integration.ibm.com/v1beta1
-kind: PlatformNavigator
-metadata:
-  name: cp4i-navigator
-  namespace: cp4i
-spec:
-  license:
-    accept: true
-  mqDashboard: true
-  replicas: 3
-  version: 2020.3.1
-EOF
+echo "Creating Platform Navigator"
+oc apply -f 03-platform-navigator-install.yaml
 
-oc apply -f 05-additional-cp4i-operators.yaml
+echo "Subscribing to CP4I Operators"
+oc apply -f 04-additional-cp4i-operators.yaml
 
