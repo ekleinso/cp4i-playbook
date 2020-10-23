@@ -1,103 +1,47 @@
 #!/bin/bash
-# ----------------------------------------------------------------------------------------------------\\
-# Description:
-#   A ridiculous script to get rid of one or more namespace(s) stuck in terminating state for a ROKS CP4MCM Env
+
+###############################################################################
+# Copyright (c) 2018 Red Hat Inc
 #
-#   Options:
-#     STUCKNAMESPACE:  Namespace targetted for removal
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
 #
-#   Author: joshisa(at)us.ibm.com
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0
 #
-#   Example:
-#     ./delete-stuck-namespace.sh STUCKNAMESPACE
-#
-#   Reference: 
-#     https://stackoverflow.com/questions/46302126/how-to-stop-kubectl-proxy
-#     https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-569663112
-#
-# ----------------------------------------------------------------------------------------------------\\
+# SPDX-License-Identifier: EPL-2.0
+###############################################################################
 
-############
-# Colors  ##
-############
-Green='\x1B[0;32m'
-Red='\x1B[0;31m'
-Yellow='\x1B[0;33m'
-Cyan='\x1B[0;36m'
-no_color='\x1B[0m' # No Color
-beer='\xF0\x9f\x8d\xba'
-delivery='\xF0\x9F\x9A\x9A'
-beers='\xF0\x9F\x8D\xBB'
-eyes='\xF0\x9F\x91\x80'
-cloud='\xE2\x98\x81'
-crossbones='\xE2\x98\xA0'
-litter='\xF0\x9F\x9A\xAE'
-fail='\xE2\x9B\x94'
-harpoons='\xE2\x87\x8C'
-tools='\xE2\x9A\x92'
-present='\xF0\x9F\x8E\x81'
-#############
+set -eo pipefail
 
-set -e
+die() { echo "$*" 1>&2 ; exit 1; }
 
-clear
+need() {
+    which "$1" &>/dev/null || die "Binary '$1' is missing but required"
+}
 
-USAGE="${crossbones}\t${eyes}  Usage: ./${0##*/} STUCKNAMESPACE\n
-\tSTUCK NAMESPACE:\tNAMESPACE stuck in terminating state\n"
+# checking pre-reqs
 
+need "jq"
+need "curl"
+need "kubectl"
 
-echo -e "${tools}   Welcome to the ridiculous Stuck Namespace Remover script for ROKS CloudPak for MCM";
-if [ $# -lt 1 ]; then
-  echo -e $USAGE
-  kubectl get ns | grep "Terminating"
-  exit 1
-fi
+PROJECT="$1"
+shift
 
-STUCKNAMESPACE="${1}"
+test -n "$PROJECT" || die "Missing arguments: kill-ns <namespace>"
 
-if [ "${OSTYPE}" == "rhel" ]; then
-  sudo yum install epel-release -y
-  sudo yum install jq -y
-elif [[ "${OSTYPE}" == "darwin"* ]]; then
-  brew install jq 2>/dev/null && true;
-else
-  sudo apt-get -qq install jq -y
-fi
+kubectl proxy &>/dev/null &
+PROXY_PID=$!
+killproxy () {
+    kill $PROXY_PID
+}
+trap killproxy EXIT
 
-# Fire up the kubectl proxy to access the API
-kubectl proxy > /dev/null 2>&1 &
+sleep 1 # give the proxy a second
 
-# Let's make the argument match test case insensitive
-shopt -s nocasematch
+kubectl get namespace "$PROJECT" -o json | jq 'del(.spec.finalizers[] | select("kubernetes"))' | curl -s -k -H "Content-Type: application/json" -X PUT -o /dev/null --data-binary @- http://localhost:8001/api/v1/namespaces/$PROJECT/finalize && echo "Killed namespace: $PROJECT"
 
-if [[ "${STUCKNAMESPACE}" == ALL ]]
-then
-  if [[ $(kubectl get ns | grep "Terminating" | wc -l) -lt 1 ]]; then
-    echo -e "${eyes} ${beer}  There are no namespaces stuck in the terminating state.  Congratulations. It's your lucky day!"
-    exit 0
-  fi
- 
-  echo -e "${delivery} Deleting the following stuck namespaces ..."
-  kubectl get ns | grep "Terminating" | awk '{print "Namespace:\t\xE2\x98\xA0   " $1}'
-  kubectl get ns | grep "Terminating" | awk '{print $1}' | \
-  xargs -L 1 -- sh -c 'kubectl get ns $1 -o json | jq ".spec.finalizers=[]" | curl -s -X PUT http://localhost:8001/api/v1/namespaces/$1/finalize -H "Content-Type: application/json" --data @- > /dev/null' _
-else
-  echo -e "${crossbones}  Deleting the stuck namespace named ${STUCKNAMESPACE}"
-  kubectl get ns ${STUCKNAMESPACE} -o json | \
-  jq '.spec.finalizers=[]' | \
-  curl -s -X PUT http://localhost:8001/api/v1/namespaces/${STUCKNAMESPACE}/finalize -H "Content-Type: application/json" --data @- > /dev/null
-fi
-
-# Kill the kubectl proxy that is running in the background
-if [ "${OSTYPE}" == "rhel" ]; then
-  echo -e "No process kill command for kubectl proxy defined for RHEL.  Updates welcome."
-  echo -e "You will need to kill the process yourself"
-  ps -ef | grep "kubectl proxy"
-elif [[ "${OSTYPE}" == "darwin"* ]]; then
-  pkill -9 -f "kubectl proxy"
-else
-  echo -e "No process kill command for kubectl proxy defined for non-RHEL/non-OSX.  Updates welcome."
-  echo -e "You will need to kill the process yourself"
-  ps -ef | grep "kubectl proxy"
-fi
+# proxy will get killed by the trap 
 
