@@ -5,4 +5,4 @@ metadata:
   annotations:
     openshift.io/node-selector: ""
   labels:
-    openshift.io/cluster-monitoring: "true"
+    openshift.io/cluster-monitoring: "false"
