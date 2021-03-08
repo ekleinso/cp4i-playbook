@@ -37,7 +37,7 @@ oc new-project ibm-common-services-operator
 ```
 or
 ```shell
-oc apply -f 04-namespace.yaml
+oc apply -f 03-namespace.yaml
 ```
 If you wish to change it back to **common-services** just keep in mind you will have to update the remaining yaml files.
 4. Create IBM common services subscription
@@ -46,7 +46,7 @@ oc apply -f 04-common-service-subscription.yaml
 ```
 wait for the subscription install to complete
 ```shell
-oc -n ibm-common-services-operator get csv
+oc -n ibm-common-services get csv
 ```
 There should be 2; **ibm-common-service-operator** and **operand-deployment-lifecycle-manager**
 
